@@ -7,16 +7,39 @@ using Data.Interfaces;
 using Data.Repositories;
 using Bussines.Interfaces;
 using Bussines.Services;
-
 using Modelo_de_security.Settings;
-
+using Modelo_de_security.Middleware;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // ✅ Configurar JWT Settings desde appsettings
 var jwtSettings = new JwtSettings();
 builder.Configuration.GetSection("Jwt").Bind(jwtSettings);
-builder.Services.AddSingleton(jwtSettings);
+builder.Services.AddSingleton<IJwtSettings>(jwtSettings);
+
+// ✅ Configurar Logging
+builder.Services.AddLogging(config =>
+{
+    config.ClearProviders();
+    config.AddConsole();
+    config.AddDebug();
+});
+
+// ✅ Configurar CORS
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowFrontend", policy =>
+    {
+        policy
+            .AllowAnyOrigin()
+            .AllowAnyMethod()
+            .AllowAnyHeader();
+    });
+});
+
+// ⚠️ NOTA: JWT aún no está configurado.
+// Para habilitarlo, ejecuta: dotnet add package Microsoft.AspNetCore.Authentication.JwtBearer
+// Luego descomenta el código de autenticación JWT en Program.cs
 
 // Add services to the container.
 builder.Services.AddControllers();
@@ -54,6 +77,9 @@ builder.Services.AddScoped<IModuleFormService, ModuleFormService>();
 builder.Services.AddScoped<IRoleFormPermissionService, RoleFormPermissionService>();
 builder.Services.AddScoped<IUserRoleService, UserRoleService>();
 
+// ✅ Registrar AuthService
+builder.Services.AddScoped<IAuthService, AuthService>();
+
 var app = builder.Build();
 
 
@@ -63,7 +89,12 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
+// ✅ Middleware de manejo global de excepciones
+app.UseMiddleware<GlobalExceptionHandler>();
+
 app.UseHttpsRedirection();
+
+app.UseCors("AllowFrontend");
 
 app.UseAuthorization();
 

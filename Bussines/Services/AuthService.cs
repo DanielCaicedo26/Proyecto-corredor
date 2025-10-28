@@ -1,0 +1,309 @@
+using Entity.Dtos;
+using Entity.Dtos.Auth;
+using Data.Interfaces;
+using Bussines.Interfaces;
+using System.Security.Cryptography;
+using System.Text;
+using System.IdentityModel.Tokens.Jwt;
+using System.Text.RegularExpressions;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.Extensions.Logging;
+
+namespace Bussines.Services
+{
+    public class AuthService : IAuthService
+    {
+        private readonly IUserRepository _userRepository;
+        private readonly IJwtSettings _jwtSettings;
+        private readonly ILogger<AuthService> _logger;
+
+        public AuthService(
+            IUserRepository userRepository, 
+            IJwtSettings jwtSettings, 
+            ILogger<AuthService> logger)
+        {
+            _userRepository = userRepository;
+            _jwtSettings = jwtSettings;
+            _logger = logger;
+        }
+
+        /// <summary>
+        /// Autentica un usuario con username y contraseña
+        /// </summary>
+        public async Task<AuthResponse> LoginAsync(LoginRequest request)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(request?.Username) || string.IsNullOrWhiteSpace(request?.Password))
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Username y Password son requeridos"
+                    };
+                }
+
+                // Buscar usuario por username
+                var user = await _userRepository.GetByUsernameAsync(request.Username);
+                if (user == null)
+                {
+                    _logger.LogWarning("Intento de login fallido: usuario '{Username}' no encontrado", request.Username);
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Usuario o contraseña incorrectos"
+                    };
+                }
+
+                // Verificar contraseña
+                if (string.IsNullOrEmpty(user.Password) || !VerifyPassword(request.Password, user.Password))
+                {
+                    _logger.LogWarning("Intento de login fallido: contraseña incorrecta para usuario '{Username}'", request.Username);
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Usuario o contraseña incorrectos"
+                    };
+                }
+
+                // Generar JWT
+                var token = GenerateJwtToken(user.Id, user.Username ?? string.Empty);
+
+                _logger.LogInformation("Usuario '{Username}' ha iniciado sesión exitosamente", request.Username);
+
+                return new AuthResponse
+                {
+                    Success = true,
+                    Message = "Login exitoso",
+                    Token = token,
+                    User = user
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error durante el login");
+                return new AuthResponse
+                {
+                    Success = false,
+                    Message = "Error interno del servidor"
+                };
+            }
+        }
+
+        /// <summary>
+        /// Registra un nuevo usuario
+        /// </summary>
+        public async Task<AuthResponse> RegisterAsync(RegisterRequest request)
+        {
+            try
+            {
+                // Validaciones
+                if (string.IsNullOrWhiteSpace(request?.Username))
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Username es requerido"
+                    };
+                }
+
+                if (request.Username.Length < 3)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Username debe tener mínimo 3 caracteres"
+                    };
+                }
+
+                if (string.IsNullOrWhiteSpace(request?.Email))
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Email es requerido"
+                    };
+                }
+
+                if (!IsValidEmail(request.Email))
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Email no es válido"
+                    };
+                }
+
+                if (string.IsNullOrWhiteSpace(request?.Password))
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Password es requerido"
+                    };
+                }
+
+                if (request.Password.Length < 6)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Password debe tener mínimo 6 caracteres"
+                    };
+                }
+
+                if (request.Password != request.ConfirmPassword)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Las contraseñas no coinciden"
+                    };
+                }
+
+                // Verificar si username ya existe
+                var existingUsername = await _userRepository.GetByUsernameAsync(request.Username);
+                if (existingUsername != null)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Este username ya está registrado"
+                    };
+                }
+
+                // Verificar si email ya existe
+                var existingEmail = await _userRepository.GetByEmailAsync(request.Email);
+                if (existingEmail != null)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Este email ya está registrado"
+                    };
+                }
+
+                // Crear nuevo usuario (nota: la contraseña será hasheada en el repositorio/entity)
+                var newUser = new UserDto
+                {
+                    Username = request.Username,
+                    Email = request.Email,
+                    Password = HashPassword(request.Password),
+                    RegistrationDate = DateTime.UtcNow
+                };
+
+                var createdUser = await _userRepository.AddAsync(newUser);
+
+                _logger.LogInformation("Nuevo usuario registrado: '{Username}'", request.Username);
+
+                return new AuthResponse
+                {
+                    Success = true,
+                    Message = "Registro exitoso",
+                    User = createdUser
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error durante el registro");
+                return new AuthResponse
+                {
+                    Success = false,
+                    Message = "Error interno del servidor"
+                };
+            }
+        }
+
+        /// <summary>
+        /// Genera un JWT token
+        /// </summary>
+        public string GenerateJwtToken(int userId, string username)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(username))
+                    throw new ArgumentException("Username no puede ser nulo o vacío");
+
+                var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_jwtSettings.SecretKey));
+                var credentials = new SigningCredentials(key, SecurityAlgorithms.HmacSha256);
+
+                var claims = new[]
+                {
+                    new System.Security.Claims.Claim("sub", userId.ToString()),
+                    new System.Security.Claims.Claim(System.Security.Claims.ClaimTypes.Name, username),
+                    new System.Security.Claims.Claim("iat", DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString())
+                };
+
+                var token = new JwtSecurityToken(
+                    issuer: _jwtSettings.Issuer,
+                    audience: _jwtSettings.Audience,
+                    claims: claims,
+                    expires: DateTime.UtcNow.AddMinutes(_jwtSettings.ExpirationMinutes),
+                    signingCredentials: credentials
+                );
+
+                return new JwtSecurityTokenHandler().WriteToken(token);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al generar JWT token");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Hashea una contraseña
+        /// </summary>
+        private string HashPassword(string password)
+        {
+            using (var sha256 = SHA256.Create())
+            {
+                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
+                return Convert.ToBase64String(hashedBytes);
+            }
+        }
+
+        /// <summary>
+        /// Verifica una contraseña contra su hash
+        /// </summary>
+        private bool VerifyPassword(string password, string hash)
+        {
+            try
+            {
+                var hashOfInput = HashPassword(password);
+                return hashOfInput.Equals(hash);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Valida formato de email usando regex
+        /// </summary>
+        private bool IsValidEmail(string email)
+        {
+            try
+            {
+                // Patrón regex para validar email
+                const string emailPattern = @"^[^\s@]+@[^\s@]+\.[^\s@]+$";
+                
+                if (string.IsNullOrWhiteSpace(email))
+                    return false;
+
+                // Validar con regex
+                if (!Regex.IsMatch(email, emailPattern))
+                    return false;
+
+                // Validar con MailAddress como doble verificación
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+    }
+}
