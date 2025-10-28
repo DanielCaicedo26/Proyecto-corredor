@@ -43,7 +43,56 @@ builder.Services.AddCors(options =>
 
 // Add services to the container.
 builder.Services.AddControllers();
-builder.Services.AddOpenApi();
+
+// ✅ Configurar Swagger (Swashbuckle)
+builder.Services.AddSwaggerGen(c =>
+{
+    c.SwaggerDoc("v1", new Microsoft.OpenApi.Models.OpenApiInfo
+    {
+        Title = "Modelo de Security API",
+        Version = "v1",
+        Description = "API para gestionar usuarios, roles, permisos, formas y módulos",
+        Contact = new Microsoft.OpenApi.Models.OpenApiContact
+        {
+            Name = "Developer Team",
+            Email = "info@ejemplo.com"
+        }
+    });
+
+    // Agregar documentación XML de comentarios
+    var xmlFile = System.IO.Path.Combine(System.AppContext.BaseDirectory, "Modelo de security.xml");
+    if (System.IO.File.Exists(xmlFile))
+    {
+        c.IncludeXmlComments(xmlFile);
+    }
+
+    // Configurar Swagger para JWT
+    var securityScheme = new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+    {
+        Name = "JWT Authentication",
+        Description = "Introduce tu token JWT en el campo siguiente",
+        In = Microsoft.OpenApi.Models.ParameterLocation.Header,
+        Type = Microsoft.OpenApi.Models.SecuritySchemeType.Http,
+        Scheme = "bearer",
+        BearerFormat = "JWT"
+    };
+
+    c.AddSecurityDefinition("Bearer", securityScheme);
+    c.AddSecurityRequirement(new Microsoft.OpenApi.Models.OpenApiSecurityRequirement
+    {
+        {
+            new Microsoft.OpenApi.Models.OpenApiSecurityScheme
+            {
+                Reference = new Microsoft.OpenApi.Models.OpenApiReference
+                {
+                    Type = Microsoft.OpenApi.Models.ReferenceType.SecurityScheme,
+                    Id = "Bearer"
+                }
+            },
+            new string[] { }
+        }
+    });
+});
 
 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -82,11 +131,16 @@ builder.Services.AddScoped<IAuthService, AuthService>();
 
 var app = builder.Build();
 
-
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.MapOpenApi();
+    // ✅ Swagger UI
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "Modelo de Security API v1");
+        c.RoutePrefix = string.Empty; // Para abrir Swagger en la raíz (localhost:5000/)
+    });
 }
 
 // ✅ Middleware de manejo global de excepciones

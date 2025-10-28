@@ -66,7 +66,7 @@ namespace Modelo_de_security.Controllers
         }
 
         /// <summary>
-        /// Registro de nuevo usuario
+        /// Registro de nuevo usuario con datos de Persona
         /// </summary>
         /// <remarks>
         /// Ejemplo de solicitud:
@@ -76,24 +76,30 @@ namespace Modelo_de_security.Controllers
         ///         "username": "user123",
         ///         "email": "user@example.com",
         ///         "password": "password123",
-        ///         "confirmPassword": "password123"
+        ///         "confirmPassword": "password123",
+        ///         "name": "Juan",
+        ///         "lastName": "Pérez",
+        ///         "phone": "3005551234",
+        ///         "documentNumber": "1234567890"
         ///     }
         /// 
         /// Respuesta exitosa (201):
         ///     {
         ///         "success": true,
-        ///         "message": "Registro exitoso",
+        ///         "message": "Registro exitoso. Bienvenido!",
         ///         "user": {
         ///             "id": 1,
         ///             "username": "user123",
-        ///             "email": "user@example.com"
+        ///             "email": "user@example.com",
+        ///             "personaId": 1,
+        ///             "registrationDate": "2024-10-28T12:00:00Z"
         ///         }
         ///     }
         /// </remarks>
         [HttpPost("register")]
         [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status201Created)]
         [ProducesResponseType(typeof(AuthResponse), StatusCodes.Status400BadRequest)]
-        public async Task<ActionResult<AuthResponse>> Register([FromBody] RegisterRequest request)
+        public async Task<ActionResult<AuthResponse>> Register([FromBody] RegisterRequestExtended request)
         {
             if (!ModelState.IsValid)
             {
@@ -104,7 +110,7 @@ namespace Modelo_de_security.Controllers
                 });
             }
 
-            var result = await _authService.RegisterAsync(request);
+            var result = await _authService.RegisterWithPersonaAsync(request);
 
             if (!result.Success)
             {

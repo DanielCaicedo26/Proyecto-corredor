@@ -14,15 +14,18 @@ namespace Bussines.Services
     public class AuthService : IAuthService
     {
         private readonly IUserRepository _userRepository;
+        private readonly IPersonaService _personaService;
         private readonly IJwtSettings _jwtSettings;
         private readonly ILogger<AuthService> _logger;
 
         public AuthService(
-            IUserRepository userRepository, 
+            IUserRepository userRepository,
+            IPersonaService personaService,
             IJwtSettings jwtSettings, 
             ILogger<AuthService> logger)
         {
             _userRepository = userRepository;
+            _personaService = personaService;
             _jwtSettings = jwtSettings;
             _logger = logger;
         }
@@ -215,6 +218,215 @@ namespace Bussines.Services
         }
 
         /// <summary>
+        /// Registra un nuevo usuario con datos de Persona
+        /// </summary>
+        public async Task<AuthResponse> RegisterWithPersonaAsync(RegisterRequestExtended request)
+        {
+            try
+            {
+                // Validaciones básicas
+                if (string.IsNullOrWhiteSpace(request?.Username))
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Username es requerido"
+                    };
+                }
+
+                if (request.Username.Length < 3)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Username debe tener mínimo 3 caracteres"
+                    };
+                }
+
+                if (string.IsNullOrWhiteSpace(request?.Email))
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Email es requerido"
+                    };
+                }
+
+                if (!IsValidEmail(request.Email))
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Email no es válido"
+                    };
+                }
+
+                if (string.IsNullOrWhiteSpace(request?.Password))
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Password es requerido"
+                    };
+                }
+
+                if (request.Password.Length < 6)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Password debe tener mínimo 6 caracteres"
+                    };
+                }
+
+                if (request.Password != request.ConfirmPassword)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Las contraseñas no coinciden"
+                    };
+                }
+
+                // Validaciones de Persona
+                if (string.IsNullOrWhiteSpace(request?.Name))
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Nombre es requerido"
+                    };
+                }
+
+                if (string.IsNullOrWhiteSpace(request?.LastName))
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Apellido es requerido"
+                    };
+                }
+
+                if (string.IsNullOrWhiteSpace(request?.Phone))
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Teléfono es requerido"
+                    };
+                }
+
+                if (string.IsNullOrWhiteSpace(request?.DocumentNumber))
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Número de documento es requerido"
+                    };
+                }
+
+                // Verificar si username ya existe
+                var existingUsername = await _userRepository.GetByUsernameAsync(request.Username);
+                if (existingUsername != null)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Este username ya está registrado"
+                    };
+                }
+
+                // Verificar si email ya existe
+                var existingEmail = await _userRepository.GetByEmailAsync(request.Email);
+                if (existingEmail != null)
+                {
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Este email ya está registrado"
+                    };
+                }
+
+                // ✅ Crear la Persona primero
+                var newPersona = new PersonaDto
+                {
+                    Name = request.Name,
+                    LastName = request.LastName,
+                    Phone = request.Phone,
+                    DocumentNumber = request.DocumentNumber
+                };
+
+                PersonaDto createdPersona;
+                try
+                {
+                    createdPersona = await _personaService.CreateAsync(newPersona);
+                }
+                catch (InvalidOperationException ex)
+                {
+                    _logger.LogWarning("Error al crear Persona durante registro: {ErrorMessage}", ex.Message);
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = ex.Message
+                    };
+                }
+
+                if (createdPersona == null || createdPersona.Id <= 0)
+                {
+                    _logger.LogError("No se pudo crear la Persona para el nuevo usuario");
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Error al crear el perfil de persona"
+                    };
+                }
+
+                // ✅ Crear el Usuario asociado a la Persona
+                var newUser = new UserDto
+                {
+                    Username = request.Username,
+                    Email = request.Email,
+                    Password = HashPassword(request.Password),
+                    PersonaId = createdPersona.Id,
+                    RegistrationDate = DateTime.UtcNow
+                };
+
+                var createdUser = await _userRepository.AddAsync(newUser);
+
+                if (createdUser == null || createdUser.Id <= 0)
+                {
+                    _logger.LogError("No se pudo crear el Usuario para el registro");
+                    return new AuthResponse
+                    {
+                        Success = false,
+                        Message = "Error al crear la cuenta de usuario"
+                    };
+                }
+
+                // ✅ Generar JWT Token para el nuevo usuario
+                var token = GenerateJwtToken(createdUser.Id, createdUser.Username ?? string.Empty);
+
+                _logger.LogInformation("Nuevo usuario registrado con Persona: '{Username}' (PersonaId: {PersonaId})", 
+                    request.Username, createdPersona.Id);
+
+                return new AuthResponse
+                {
+                    Success = true,
+                    Message = "Registro exitoso. Bienvenido!",
+                    Token = token,
+                    User = createdUser
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error durante el registro con Persona");
+                return new AuthResponse
+                {
+                    Success = false,
+                    Message = "Error interno del servidor"
+                };
+            }
+        }
         /// Genera un JWT token
         /// </summary>
         public string GenerateJwtToken(int userId, string username)
