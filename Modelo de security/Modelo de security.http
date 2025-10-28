@@ -1,0 +1,6 @@
+@Modelo_de_security_HostAddress = http://localhost:5160
+
+GET {{Modelo_de_security_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
