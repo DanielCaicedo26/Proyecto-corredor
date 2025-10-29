@@ -27,20 +27,6 @@ namespace Bussines.Services
                 _logger.LogInformation("Iniciando creación de nuevo usuario: {Username}", dto.Username);
                 ValidateData(dto);
 
-                var existing = await _userRepository.GetByEmailAsync(dto.Email!);
-                if (existing != null)
-                {
-                    _logger.LogWarning("Intento de crear usuario con email duplicado: {Email}", dto.Email);
-                    throw new InvalidOperationException("Este email ya está registrado");
-                }
-
-                var existingUsername = await _userRepository.GetByUsernameAsync(dto.Username!);
-                if (existingUsername != null)
-                {
-                    _logger.LogWarning("Intento de crear usuario con username duplicado: {Username}", dto.Username);
-                    throw new InvalidOperationException("Este nombre de usuario ya existe");
-                }
-
                 var result = await _userRepository.AddAsync(dto);
                 _logger.LogInformation("Usuario creado exitosamente. UserId: {UserId}, Username: {Username}", result.Id, result.Username);
                 return result;

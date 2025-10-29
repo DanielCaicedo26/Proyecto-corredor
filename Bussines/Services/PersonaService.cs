@@ -20,10 +20,6 @@ namespace Bussines.Services
 
             ValidateData(dto);
 
-            var existing = await _personaRepository.GetByDocumentNumberAsync(dto.DocumentNumber);
-            if (existing != null)
-                throw new InvalidOperationException("Este número de documento ya existe");
-
             return await _personaRepository.AddAsync(dto);
         }
 

@@ -12,13 +12,5 @@ namespace Data.Repositories
         public PersonaRepository(ApplicationDbContext context, IMapper mapper) : base(context, mapper)
         {
         }
-
-        public async Task<PersonaDto> GetByDocumentNumberAsync(string documentNumber)
-        {
-            var persona = await _dbSet
-                .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.DocumentNumber == documentNumber);
-            return _mapper.Map<PersonaDto>(persona);
-        }
     }
 }

@@ -12,13 +12,5 @@ namespace Data.Repositories
         public PermissionRepository(ApplicationDbContext context, IMapper mapper) : base(context, mapper)
         {
         }
-
-        public async Task<PermissionDto> GetByNameAsync(string name)
-        {
-            var permission = await _dbSet
-                .AsNoTracking()
-                .FirstOrDefaultAsync(p => p.Name == name);
-            return _mapper.Map<PermissionDto>(permission);
-        }
     }
 }

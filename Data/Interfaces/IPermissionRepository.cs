@@ -4,6 +4,5 @@ namespace Data.Interfaces
 {
     public interface IPermissionRepository : IGenericRepository<PermissionDto>
     {
-        Task<PermissionDto> GetByNameAsync(string name);
     }
 }

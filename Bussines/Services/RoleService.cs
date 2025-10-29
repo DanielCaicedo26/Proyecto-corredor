@@ -20,10 +20,6 @@ namespace Bussines.Services
 
             ValidateData(dto);
 
-            var existing = await _roleRepository.GetByNameAsync(dto.Name);
-            if (existing != null)
-                throw new InvalidOperationException("Este nombre de rol ya existe");
-
             return await _roleRepository.AddAsync(dto);
         }
 

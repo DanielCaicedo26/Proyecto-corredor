@@ -81,65 +81,6 @@ namespace Modelo_de_security.Controllers
         }
 
         /// <summary>
-        /// Obtiene un rol por nombre
-        /// </summary>
-        [HttpGet("by-name/{name}")]
-        [ProducesResponseType(typeof(RoleDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<RoleDto>> GetByName(string name)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(name))
-                    return BadRequest("El nombre del rol es requerido");
-
-                _logger.LogInformation("Obteniendo rol con nombre: {RoleName}", name);
-                var role = await _roleService.GetByNameAsync(name);
-
-                if (role == null)
-                {
-                    _logger.LogWarning("Rol no encontrado: {RoleName}", name);
-                    return NotFound("Rol no encontrado");
-                }
-
-                return Ok(role);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener rol por nombre: {RoleName}", name);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = "Error interno del servidor" });
-            }
-        }
-
-        /// <summary>
-        /// Obtiene roles de un usuario
-        /// </summary>
-        [HttpGet("by-user/{userId}")]
-        [ProducesResponseType(typeof(List<RoleDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<List<RoleDto>>> GetRolesByUser(int userId)
-        {
-            try
-            {
-                if (userId <= 0)
-                    return BadRequest("ID de usuario debe ser mayor a 0");
-
-                _logger.LogInformation("Obteniendo roles del usuario: {UserId}", userId);
-                var roles = await _roleService.GetRolesByUserAsync(userId);
-                return Ok(roles);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener roles del usuario: {UserId}", userId);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = "Error interno del servidor" });
-            }
-        }
-
-        /// <summary>
         /// Crea un nuevo rol
         /// </summary>
         [HttpPost]
