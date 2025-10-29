@@ -7,15 +7,10 @@ using AutoMapper;
 
 namespace Data.Repositories
 {
-    public class UserRoleRepository : IUserRoleRepository
+    public class UserRoleRepository : GenericRepository<UserRole, UserRoleDto>, IUserRoleRepository
     {
-        private readonly ApplicationDbContext _context;
-        private readonly IMapper _mapper;
-
-        public UserRoleRepository(ApplicationDbContext context, IMapper mapper)
+        public UserRoleRepository(ApplicationDbContext context, IMapper mapper) : base(context, mapper)
         {
-            _context = context;
-            _mapper = mapper;
         }
 
         public async Task<List<UserRoleDto>> GetRolesByUserAsync(int userId)

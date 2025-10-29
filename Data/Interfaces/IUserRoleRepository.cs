@@ -2,7 +2,7 @@ using Entity.Dtos;
 
 namespace Data.Interfaces
 {
-    public interface IUserRoleRepository
+    public interface IUserRoleRepository : IGenericRepository<UserRoleDto>
     {
         Task<List<UserRoleDto>> GetRolesByUserAsync(int userId);
         Task<List<UserRoleDto>> GetUsersByRoleAsync(int roleId);

@@ -8,6 +8,5 @@ namespace Entity.Dtos
         public string? Genero { get; set; }
         public TimeSpan Duracion { get; set; }
         public string? UrlCancion { get; set; }
-        public int UserId { get; set; }
     }
 }
