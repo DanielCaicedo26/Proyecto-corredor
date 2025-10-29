@@ -81,58 +81,6 @@ namespace Modelo_de_security.Controllers
         }
 
         /// <summary>
-        /// Obtiene formas por módulo
-        /// </summary>
-        [HttpGet("by-modulo/{moduloId}")]
-        [ProducesResponseType(typeof(List<FormaDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<List<FormaDto>>> GetFormasByModulo(int moduloId)
-        {
-            try
-            {
-                if (moduloId <= 0)
-                    return BadRequest("ID de módulo debe ser mayor a 0");
-
-                _logger.LogInformation("Obteniendo formas del módulo: {ModuloId}", moduloId);
-                var formas = await _formaService.GetFormasByModuloAsync(moduloId);
-                return Ok(formas);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener formas del módulo: {ModuloId}", moduloId);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = "Error interno del servidor" });
-            }
-        }
-
-        /// <summary>
-        /// Obtiene formas por estado
-        /// </summary>
-        [HttpGet("by-status/{status}")]
-        [ProducesResponseType(typeof(List<FormaDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<List<FormaDto>>> GetFormasByStatus(string status)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(status))
-                    return BadRequest("El estado es requerido");
-
-                _logger.LogInformation("Obteniendo formas con estado: {Status}", status);
-                var formas = await _formaService.GetFormasByStatusAsync(status);
-                return Ok(formas);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener formas por estado: {Status}", status);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = "Error interno del servidor" });
-            }
-        }
-
-        /// <summary>
         /// Crea una nueva forma
         /// </summary>
         [HttpPost]

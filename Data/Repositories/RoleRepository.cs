@@ -20,14 +20,5 @@ namespace Data.Repositories
                 .FirstOrDefaultAsync(r => r.Name == name);
             return _mapper.Map<RoleDto>(role);
         }
-
-        public async Task<List<RoleDto>> GetRolesByUserAsync(int userId)
-        {
-            var roles = await _dbSet
-                .AsNoTracking()
-                .Where(r => r.UserRoles.Any(ur => ur.UserId == userId))
-                .ToListAsync();
-            return _mapper.Map<List<RoleDto>>(roles);
-        }
     }
 }

@@ -44,26 +44,6 @@ namespace Bussines.Services
             return await _permissionRepository.UpdateAsync(dto);
         }
 
-        public async Task<PermissionDto> GetByNameAsync(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Name es requerido");
-
-            var permission = await _permissionRepository.GetByNameAsync(name);
-            if (permission == null)
-                throw new KeyNotFoundException("Permiso no encontrado");
-
-            return permission;
-        }
-
-        public async Task<List<PermissionDto>> GetPermissionsByRoleAsync(int roleId)
-        {
-            if (roleId <= 0)
-                throw new ArgumentException("Role ID debe ser mayor a 0");
-
-            return await _permissionRepository.GetPermissionsByRoleAsync(roleId);
-        }
-
         protected override void ValidateData(PermissionDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Name))

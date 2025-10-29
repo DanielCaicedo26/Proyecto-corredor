@@ -20,14 +20,5 @@ namespace Data.Repositories
                 .FirstOrDefaultAsync(p => p.Name == name);
             return _mapper.Map<PermissionDto>(permission);
         }
-
-        public async Task<List<PermissionDto>> GetPermissionsByRoleAsync(int roleId)
-        {
-            var permissions = await _dbSet
-                .AsNoTracking()
-                .Where(p => p.RoleFormPermissions.Any(rfp => rfp.RoleId == roleId))
-                .ToListAsync();
-            return _mapper.Map<List<PermissionDto>>(permissions);
-        }
     }
 }

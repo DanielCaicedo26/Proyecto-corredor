@@ -39,19 +39,6 @@ namespace Bussines.Services
             return await _formaRepository.UpdateAsync(dto);
         }
 
-        public async Task<List<FormaDto>> GetFormasByModuloAsync(int moduloId)
-        {
-            if (moduloId <= 0)
-                throw new ArgumentException("Modulo ID debe ser mayor a 0");
-
-            return await _formaRepository.GetFormasByModuloAsync(moduloId);
-        }
-
-        public async Task<List<FormaDto>> GetFormasByStatusAsync(string status)
-        {
-            return await _formaRepository.GetFormasByStatusAsync(status);
-        }
-
         protected override void ValidateData(FormaDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Name))

@@ -12,23 +12,5 @@ namespace Data.Repositories
         public FormaRepository(ApplicationDbContext context, IMapper mapper) : base(context, mapper)
         {
         }
-
-        public async Task<List<FormaDto>> GetFormasByModuloAsync(int moduloId)
-        {
-            var formas = await _dbSet
-                .AsNoTracking()
-                .Where(f => f.ModuleForms.Any(mf => mf.ModuloId == moduloId))
-                .ToListAsync();
-            return _mapper.Map<List<FormaDto>>(formas);
-        }
-
-        public async Task<List<FormaDto>> GetFormasByStatusAsync(string status)
-        {
-            var formas = await _dbSet
-                .AsNoTracking()
-                .Where(f => f.Status == status)
-                .ToListAsync();
-            return _mapper.Map<List<FormaDto>>(formas);
-        }
     }
 }

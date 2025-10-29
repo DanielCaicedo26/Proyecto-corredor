@@ -44,23 +44,6 @@ namespace Bussines.Services
             return await _personaRepository.UpdateAsync(dto);
         }
 
-        public async Task<PersonaDto> GetByDocumentNumberAsync(string documentNumber)
-        {
-            if (string.IsNullOrWhiteSpace(documentNumber))
-                throw new ArgumentException("Número de documento es requerido");
-
-            var persona = await _personaRepository.GetByDocumentNumberAsync(documentNumber);
-            if (persona == null)
-                throw new KeyNotFoundException("Persona no encontrada");
-
-            return persona;
-        }
-
-        public async Task<List<PersonaDto>> GetPersonasWithUsersAsync()
-        {
-            return await _personaRepository.GetPersonasWithUsersAsync();
-        }
-
         protected override void ValidateData(PersonaDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Name))

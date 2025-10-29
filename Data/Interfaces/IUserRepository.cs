@@ -6,6 +6,5 @@ namespace Data.Interfaces
     {
         Task<UserDto> GetByUsernameAsync(string username);
         Task<UserDto> GetByEmailAsync(string email);
-        Task<List<UserDto>> GetUsersByRoleAsync(int roleId);
     }
 }

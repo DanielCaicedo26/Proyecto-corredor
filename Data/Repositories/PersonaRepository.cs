@@ -20,14 +20,5 @@ namespace Data.Repositories
                 .FirstOrDefaultAsync(p => p.DocumentNumber == documentNumber);
             return _mapper.Map<PersonaDto>(persona);
         }
-
-        public async Task<List<PersonaDto>> GetPersonasWithUsersAsync()
-        {
-            var personas = await _dbSet
-                .AsNoTracking()
-                .Where(p => p.Users.Any())
-                .ToListAsync();
-            return _mapper.Map<List<PersonaDto>>(personas);
-        }
     }
 }

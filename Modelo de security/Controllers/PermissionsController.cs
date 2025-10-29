@@ -81,65 +81,6 @@ namespace Modelo_de_security.Controllers
         }
 
         /// <summary>
-        /// Obtiene un permiso por nombre
-        /// </summary>
-        [HttpGet("by-name/{name}")]
-        [ProducesResponseType(typeof(PermissionDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<PermissionDto>> GetByName(string name)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(name))
-                    return BadRequest("El nombre del permiso es requerido");
-
-                _logger.LogInformation("Obteniendo permiso con nombre: {PermissionName}", name);
-                var permission = await _permissionService.GetByNameAsync(name);
-
-                if (permission == null)
-                {
-                    _logger.LogWarning("Permiso no encontrado: {PermissionName}", name);
-                    return NotFound("Permiso no encontrado");
-                }
-
-                return Ok(permission);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener permiso por nombre: {PermissionName}", name);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = "Error interno del servidor" });
-            }
-        }
-
-        /// <summary>
-        /// Obtiene permisos por rol
-        /// </summary>
-        [HttpGet("by-role/{roleId}")]
-        [ProducesResponseType(typeof(List<PermissionDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<List<PermissionDto>>> GetPermissionsByRole(int roleId)
-        {
-            try
-            {
-                if (roleId <= 0)
-                    return BadRequest("ID de rol debe ser mayor a 0");
-
-                _logger.LogInformation("Obteniendo permisos del rol: {RoleId}", roleId);
-                var permissions = await _permissionService.GetPermissionsByRoleAsync(roleId);
-                return Ok(permissions);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener permisos del rol: {RoleId}", roleId);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = "Error interno del servidor" });
-            }
-        }
-
-        /// <summary>
         /// Crea un nuevo permiso
         /// </summary>
         [HttpPost]

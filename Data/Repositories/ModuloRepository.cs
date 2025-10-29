@@ -12,23 +12,5 @@ namespace Data.Repositories
         public ModuloRepository(ApplicationDbContext context, IMapper mapper) : base(context, mapper)
         {
         }
-
-        public async Task<List<ModuloDto>> GetModulosByStatusAsync(string status)
-        {
-            var modulos = await _dbSet
-                .AsNoTracking()
-                .Where(m => m.Status == status)
-                .ToListAsync();
-            return _mapper.Map<List<ModuloDto>>(modulos);
-        }
-
-        public async Task<List<ModuloDto>> GetModulosWithFormasAsync()
-        {
-            var modulos = await _dbSet
-                .AsNoTracking()
-                .Where(m => m.ModuleForms.Any())
-                .ToListAsync();
-            return _mapper.Map<List<ModuloDto>>(modulos);
-        }
     }
 }

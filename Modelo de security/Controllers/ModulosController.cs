@@ -81,54 +81,6 @@ namespace Modelo_de_security.Controllers
         }
 
         /// <summary>
-        /// Obtiene módulos por estado
-        /// </summary>
-        [HttpGet("by-status/{status}")]
-        [ProducesResponseType(typeof(List<ModuloDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<List<ModuloDto>>> GetModulosByStatus(string status)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(status))
-                    return BadRequest("El estado es requerido");
-
-                _logger.LogInformation("Obteniendo módulos con estado: {Status}", status);
-                var modulos = await _moduloService.GetModulosByStatusAsync(status);
-                return Ok(modulos);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener módulos por estado: {Status}", status);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = "Error interno del servidor" });
-            }
-        }
-
-        /// <summary>
-        /// Obtiene módulos con sus formas
-        /// </summary>
-        [HttpGet("with-formas")]
-        [ProducesResponseType(typeof(List<ModuloDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<List<ModuloDto>>> GetModulosWithFormas()
-        {
-            try
-            {
-                _logger.LogInformation("Obteniendo módulos con formas");
-                var modulos = await _moduloService.GetModulosWithFormasAsync();
-                return Ok(modulos);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener módulos con formas");
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = "Error interno del servidor" });
-            }
-        }
-
-        /// <summary>
         /// Crea un nuevo módulo
         /// </summary>
         [HttpPost]

@@ -39,16 +39,6 @@ namespace Bussines.Services
             return await _moduloRepository.UpdateAsync(dto);
         }
 
-        public async Task<List<ModuloDto>> GetModulosByStatusAsync(string status)
-        {
-            return await _moduloRepository.GetModulosByStatusAsync(status);
-        }
-
-        public async Task<List<ModuloDto>> GetModulosWithFormasAsync()
-        {
-            return await _moduloRepository.GetModulosWithFormasAsync();
-        }
-
         protected override void ValidateData(ModuloDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Name))

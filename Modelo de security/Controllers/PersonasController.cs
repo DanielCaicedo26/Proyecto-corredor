@@ -81,61 +81,6 @@ namespace Modelo_de_security.Controllers
         }
 
         /// <summary>
-        /// Obtiene una persona por número de documento
-        /// </summary>
-        [HttpGet("by-document/{documentNumber}")]
-        [ProducesResponseType(typeof(PersonaDto), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<PersonaDto>> GetByDocumentNumber(string documentNumber)
-        {
-            try
-            {
-                if (string.IsNullOrWhiteSpace(documentNumber))
-                    return BadRequest("El número de documento es requerido");
-
-                _logger.LogInformation("Obteniendo persona con documento: {DocumentNumber}", documentNumber);
-                var persona = await _personaService.GetByDocumentNumberAsync(documentNumber);
-
-                if (persona == null)
-                {
-                    _logger.LogWarning("Persona no encontrada con documento: {DocumentNumber}", documentNumber);
-                    return NotFound("Persona no encontrada");
-                }
-
-                return Ok(persona);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener persona por documento: {DocumentNumber}", documentNumber);
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = "Error interno del servidor" });
-            }
-        }
-
-        /// <summary>
-        /// Obtiene personas con usuarios asociados
-        /// </summary>
-        [HttpGet("with-users")]
-        [ProducesResponseType(typeof(List<PersonaDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<List<PersonaDto>>> GetPersonasWithUsers()
-        {
-            try
-            {
-                _logger.LogInformation("Obteniendo personas con usuarios");
-                var personas = await _personaService.GetPersonasWithUsersAsync();
-                return Ok(personas);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al obtener personas con usuarios");
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = "Error interno del servidor" });
-            }
-        }
-
-        /// <summary>
         /// Crea una nueva persona
         /// </summary>
         [HttpPost]

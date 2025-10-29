@@ -28,14 +28,5 @@ namespace Data.Repositories
                 .FirstOrDefaultAsync(u => u.Email == email);
             return _mapper.Map<UserDto>(user);
         }
-
-        public async Task<List<UserDto>> GetUsersByRoleAsync(int roleId)
-        {
-            var users = await _dbSet
-                .AsNoTracking()
-                .Where(u => u.UserRoles.Any(ur => ur.RoleId == roleId))
-                .ToListAsync();
-            return _mapper.Map<List<UserDto>>(users);
-        }
     }
 }

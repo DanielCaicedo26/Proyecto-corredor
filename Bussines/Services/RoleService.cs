@@ -44,26 +44,6 @@ namespace Bussines.Services
             return await _roleRepository.UpdateAsync(dto);
         }
 
-        public async Task<RoleDto> GetByNameAsync(string name)
-        {
-            if (string.IsNullOrWhiteSpace(name))
-                throw new ArgumentException("Name es requerido");
-
-            var role = await _roleRepository.GetByNameAsync(name);
-            if (role == null)
-                throw new KeyNotFoundException("Rol no encontrado");
-
-            return role;
-        }
-
-        public async Task<List<RoleDto>> GetRolesByUserAsync(int userId)
-        {
-            if (userId <= 0)
-                throw new ArgumentException("User ID debe ser mayor a 0");
-
-            return await _roleRepository.GetRolesByUserAsync(userId);
-        }
-
         protected override void ValidateData(RoleDto dto)
         {
             if (string.IsNullOrWhiteSpace(dto.Name))
