@@ -7,7 +7,8 @@ namespace Entity.Entities
         public string Album { get; set; }
         public string Genero { get; set; }
         public TimeSpan Duracion { get; set; }
-        public int UserId { get; set; }
-        public User User { get; set; }
+
+        // Relación muchos a muchos con User
+        public ICollection<UserMusica> UserMusicas { get; set; } = new List<UserMusica>();
     }
 }

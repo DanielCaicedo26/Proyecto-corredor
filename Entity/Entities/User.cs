@@ -9,8 +9,8 @@ namespace Entity.Entities
         public DateTime RegistrationDate { get; set; }
 
         public ICollection<UserRole> UserRoles { get; set; } = new List<UserRole>();
-        // coleccion de musica asociada al usuario
-        public ICollection<Musica> Musicas { get; set; } = new List<Musica>();
+        // Relación muchos a muchos con Musica
+        public ICollection<UserMusica> UserMusicas { get; set; } = new List<UserMusica>();
         public Persona? Persona { get; set; }
     }
 }

@@ -20,56 +20,74 @@ namespace Entity.DBcontext
     public DbSet<ModuleForm> ModuleForms { get; set; }
     public DbSet<RoleFormPermission> RoleFormPermissions { get; set; }
 
-    protected override void OnModelCreating(ModelBuilder modelBuilder)
-    {
-        base.OnModelCreating(modelBuilder);
+    public DbSet<Musica> Musicas { get; set; }
+    public DbSet<UserMusica> UserMusicas { get; set; }
 
-        // Configuración de UserRole (muchos a muchos con clave compuesta)
-        modelBuilder.Entity<UserRole>()
-            .HasKey(ur => new { ur.UserId, ur.RoleId });
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
 
-        modelBuilder.Entity<UserRole>()
-            .HasOne(ur => ur.User)
-            .WithMany(u => u.UserRoles)
-            .HasForeignKey(ur => ur.UserId);
+            // Configuración de UserRole (muchos a muchos con clave compuesta)
+            modelBuilder.Entity<UserRole>()
+                .HasKey(ur => new { ur.UserId, ur.RoleId });
 
-        modelBuilder.Entity<UserRole>()
-            .HasOne(ur => ur.Role)
-            .WithMany(r => r.UserRoles)
-            .HasForeignKey(ur => ur.RoleId);
+            modelBuilder.Entity<UserRole>()
+                .HasOne(ur => ur.User)
+                .WithMany(u => u.UserRoles)
+                .HasForeignKey(ur => ur.UserId);
 
-        // Configuración de ModuleForm (muchos a muchos)
-        modelBuilder.Entity<ModuleForm>()
-            .HasOne(mf => mf.Modulo)
-            .WithMany(m => m.ModuleForms)
-            .HasForeignKey(mf => mf.ModuloId);
+            modelBuilder.Entity<UserRole>()
+                .HasOne(ur => ur.Role)
+                .WithMany(r => r.UserRoles)
+                .HasForeignKey(ur => ur.RoleId);
 
-        modelBuilder.Entity<ModuleForm>()
-            .HasOne(mf => mf.Forma)
-            .WithMany(f => f.ModuleForms)
-            .HasForeignKey(mf => mf.FormaId);
+            // Configuración de ModuleForm (muchos a muchos)
+            modelBuilder.Entity<ModuleForm>()
+                .HasOne(mf => mf.Modulo)
+                .WithMany(m => m.ModuleForms)
+                .HasForeignKey(mf => mf.ModuloId);
 
-        // Configuración de RoleFormPermission
-        modelBuilder.Entity<RoleFormPermission>()
-            .HasOne(rfp => rfp.Role)
-            .WithMany()
-            .HasForeignKey(rfp => rfp.RoleId);
+            modelBuilder.Entity<ModuleForm>()
+                .HasOne(mf => mf.Forma)
+                .WithMany(f => f.ModuleForms)
+                .HasForeignKey(mf => mf.FormaId);
 
-        modelBuilder.Entity<RoleFormPermission>()
-            .HasOne(rfp => rfp.Forma)
-            .WithMany()
-            .HasForeignKey(rfp => rfp.FormaId);
+            // Configuración de RoleFormPermission
+            modelBuilder.Entity<RoleFormPermission>()
+                .HasOne(rfp => rfp.Role)
+                .WithMany()
+                .HasForeignKey(rfp => rfp.RoleId);
 
-        modelBuilder.Entity<RoleFormPermission>()
-            .HasOne(rfp => rfp.Permission)
-            .WithMany()
-            .HasForeignKey(rfp => rfp.PermissionId);
+            modelBuilder.Entity<RoleFormPermission>()
+                .HasOne(rfp => rfp.Forma)
+                .WithMany()
+                .HasForeignKey(rfp => rfp.FormaId);
 
-        // Configuración de Persona-User
-        modelBuilder.Entity<User>()
-            .HasOne(u => u.Persona)
-            .WithMany(p => p.Users)
-            .HasForeignKey(u => u.PersonaId);
-    }
+            modelBuilder.Entity<RoleFormPermission>()
+                .HasOne(rfp => rfp.Permission)
+                .WithMany()
+                .HasForeignKey(rfp => rfp.PermissionId);
+
+            // Configuración de Persona-User
+            modelBuilder.Entity<User>()
+                .HasOne(u => u.Persona)
+                .WithMany(p => p.Users)
+                .HasForeignKey(u => u.PersonaId);
+
+            // Configuración de UserMusica (muchos a muchos)
+            modelBuilder.Entity<UserMusica>()
+                .HasKey(um => new { um.UserId, um.MusicaId });
+
+            modelBuilder.Entity<UserMusica>()
+                .HasOne(um => um.User)
+                .WithMany(u => u.UserMusicas)
+                .HasForeignKey(um => um.UserId);
+
+            modelBuilder.Entity<UserMusica>()
+                .HasOne(um => um.Musica)
+                .WithMany(m => m.UserMusicas)
+                .HasForeignKey(um => um.MusicaId);
+        }
+            
 }
 }
