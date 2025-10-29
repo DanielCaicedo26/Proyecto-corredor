@@ -2,12 +2,12 @@ using Entity.Dtos;
 using Entity.Dtos.Auth;
 using Data.Interfaces;
 using Bussines.Interfaces;
-using System.Security.Cryptography;
 using System.Text;
 using System.IdentityModel.Tokens.Jwt;
 using System.Text.RegularExpressions;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.Extensions.Logging;
+using BCrypt.Net;
 
 namespace Bussines.Services
 {
@@ -464,26 +464,21 @@ namespace Bussines.Services
         }
 
         /// <summary>
-        /// Hashea una contraseña
+        /// Hashea una contraseña usando BCrypt
         /// </summary>
         private string HashPassword(string password)
         {
-            using (var sha256 = SHA256.Create())
-            {
-                var hashedBytes = sha256.ComputeHash(Encoding.UTF8.GetBytes(password));
-                return Convert.ToBase64String(hashedBytes);
-            }
+            return BCrypt.Net.BCrypt.HashPassword(password);
         }
 
         /// <summary>
-        /// Verifica una contraseña contra su hash
+        /// Verifica una contraseña contra su hash usando BCrypt
         /// </summary>
         private bool VerifyPassword(string password, string hash)
         {
             try
             {
-                var hashOfInput = HashPassword(password);
-                return hashOfInput.Equals(hash);
+                return BCrypt.Net.BCrypt.Verify(password, hash);
             }
             catch
             {

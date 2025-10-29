@@ -12,5 +12,17 @@ namespace Data.Repositories
         public UserRepository(ApplicationDbContext context, IMapper mapper) : base(context, mapper)
         {
         }
+
+        public async Task<UserDto?> GetByUsernameAsync(string username)
+        {
+            var user = await _dbSet.FirstOrDefaultAsync(u => u.Username == username);
+            return user != null ? _mapper.Map<UserDto>(user) : null;
+        }
+
+        public async Task<UserDto?> GetByEmailAsync(string email)
+        {
+            var user = await _dbSet.FirstOrDefaultAsync(u => u.Email == email);
+            return user != null ? _mapper.Map<UserDto>(user) : null;
+        }
     }
 }

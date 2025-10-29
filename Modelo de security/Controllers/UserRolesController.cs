@@ -26,118 +26,153 @@ namespace Modelo_de_security.Controllers
         }
 
         /// <summary>
-        /// Obtiene los roles de un usuario
+        /// Obtiene todas las relaciones usuario-rol
         /// </summary>
-        [HttpGet("user/{userId}")]
-        [ProducesResponseType(typeof(List<RoleDto>), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [HttpGet]
+        [ProducesResponseType(typeof(List<UserRoleDto>), StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<List<RoleDto>>> GetUserRoles(int userId)
+        public async Task<ActionResult<List<UserRoleDto>>> GetAll()
         {
             try
             {
-                if (userId <= 0)
-                    return BadRequest("ID de usuario debe ser mayor a 0");
-
-                _logger.LogInformation("Obteniendo roles del usuario: {UserId}", userId);
-                var roles = await _userRoleService.GetUserRolesAsync(userId);
-                return Ok(roles);
+                _logger.LogInformation("Obteniendo todas las relaciones usuario-rol");
+                var userRoles = await _userRoleService.GetAllAsync();
+                return Ok(userRoles);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al obtener roles del usuario: {UserId}", userId);
+                _logger.LogError(ex, "Error al obtener relaciones usuario-rol");
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = "Error interno del servidor" });
             }
         }
 
         /// <summary>
-        /// Verifica si un usuario tiene un rol específico
+        /// Obtiene una relación usuario-rol por ID
         /// </summary>
-        [HttpGet("user/{userId}/role/{roleId}/check")]
-        [ProducesResponseType(typeof(bool), StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [HttpGet("{id}")]
+        [ProducesResponseType(typeof(UserRoleDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<ActionResult<bool>> CheckUserHasRole(int userId, int roleId)
+        public async Task<ActionResult<UserRoleDto>> GetById(int id)
         {
             try
             {
-                if (userId <= 0 || roleId <= 0)
-                    return BadRequest("IDs de usuario y rol deben ser mayores a 0");
+                if (id <= 0)
+                    return BadRequest("ID debe ser mayor a 0");
 
-                _logger.LogInformation("Verificando si usuario {UserId} tiene rol {RoleId}", userId, roleId);
-                var hasRole = await _userRoleService.UserHasRoleAsync(userId, roleId);
-                return Ok(hasRole);
+                _logger.LogInformation("Obteniendo relación usuario-rol con ID: {Id}", id);
+                var userRole = await _userRoleService.GetByIdAsync(id);
+
+                if (userRole == null)
+                {
+                    _logger.LogWarning("Relación usuario-rol no encontrada: {Id}", id);
+                    return NotFound("Relación usuario-rol no encontrada");
+                }
+
+                return Ok(userRole);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al verificar rol del usuario: {UserId}", userId);
+                _logger.LogError(ex, "Error al obtener relación usuario-rol por ID: {Id}", id);
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = "Error interno del servidor" });
             }
         }
 
         /// <summary>
-        /// Asigna un rol a un usuario
+        /// Crea una nueva relación usuario-rol
         /// </summary>
-        [HttpPost("assign")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpPost]
+        [ProducesResponseType(typeof(UserRoleDto), StatusCodes.Status201Created)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> AssignRoleToUser([FromQuery] int userId, [FromQuery] int roleId)
+        public async Task<ActionResult<UserRoleDto>> Create([FromBody] UserRoleDto userRoleDto)
         {
             try
             {
-                if (userId <= 0 || roleId <= 0)
-                    return BadRequest("IDs de usuario y rol deben ser mayores a 0");
+                if (userRoleDto == null)
+                    return BadRequest("Los datos de la relación usuario-rol son requeridos");
 
-                _logger.LogInformation("Asignando rol {RoleId} al usuario {UserId}", roleId, userId);
-                var result = await _userRoleService.AssignRoleToUserAsync(userId, roleId);
+                _logger.LogInformation("Creando nueva relación usuario-rol");
+                var createdUserRole = await _userRoleService.CreateAsync(userRoleDto);
+                return CreatedAtAction(nameof(GetById), new { id = createdUserRole.Id }, createdUserRole);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al crear relación usuario-rol");
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Actualiza una relación usuario-rol
+        /// </summary>
+        [HttpPut("{id}")]
+        [ProducesResponseType(typeof(UserRoleDto), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<ActionResult<UserRoleDto>> Update(int id, [FromBody] UserRoleDto userRoleDto)
+        {
+            try
+            {
+                if (id <= 0)
+                    return BadRequest("ID debe ser mayor a 0");
+
+                if (userRoleDto == null)
+                    return BadRequest("Los datos de la relación usuario-rol son requeridos");
+
+                userRoleDto.Id = id;
+                _logger.LogInformation("Actualizando relación usuario-rol con ID: {Id}", id);
+                var updatedUserRole = await _userRoleService.UpdateAsync(userRoleDto);
+
+                if (updatedUserRole == null)
+                {
+                    _logger.LogWarning("Relación usuario-rol no encontrada para actualizar: {Id}", id);
+                    return NotFound("Relación usuario-rol no encontrada");
+                }
+
+                return Ok(updatedUserRole);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error al actualizar relación usuario-rol con ID: {Id}", id);
+                return StatusCode(StatusCodes.Status500InternalServerError,
+                    new { message = "Error interno del servidor" });
+            }
+        }
+
+        /// <summary>
+        /// Elimina una relación usuario-rol
+        /// </summary>
+        [HttpDelete("{id}")]
+        [ProducesResponseType(StatusCodes.Status204NoContent)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                if (id <= 0)
+                    return BadRequest("ID debe ser mayor a 0");
+
+                _logger.LogInformation("Eliminando relación usuario-rol con ID: {Id}", id);
+                var result = await _userRoleService.DeleteAsync(id);
 
                 if (!result)
                 {
-                    _logger.LogWarning("No se pudo asignar el rol {RoleId} al usuario {UserId}", roleId, userId);
-                    return BadRequest("No se pudo asignar el rol al usuario");
+                    _logger.LogWarning("Relación usuario-rol no encontrada para eliminar: {Id}", id);
+                    return NotFound("Relación usuario-rol no encontrada");
                 }
 
-                return Ok(new { message = "Rol asignado correctamente" });
+                return NoContent();
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error al asignar rol al usuario");
-                return StatusCode(StatusCodes.Status500InternalServerError,
-                    new { message = "Error interno del servidor" });
-            }
-        }
-
-        /// <summary>
-        /// Remueve un rol de un usuario
-        /// </summary>
-        [HttpPost("remove")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> RemoveRoleFromUser([FromQuery] int userId, [FromQuery] int roleId)
-        {
-            try
-            {
-                if (userId <= 0 || roleId <= 0)
-                    return BadRequest("IDs de usuario y rol deben ser mayores a 0");
-
-                _logger.LogInformation("Removiendo rol {RoleId} del usuario {UserId}", roleId, userId);
-                var result = await _userRoleService.RemoveRoleFromUserAsync(userId, roleId);
-
-                if (!result)
-                {
-                    _logger.LogWarning("No se pudo remover el rol {RoleId} del usuario {UserId}", roleId, userId);
-                    return BadRequest("No se pudo remover el rol del usuario");
-                }
-
-                return Ok(new { message = "Rol removido correctamente" });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error al remover rol del usuario");
+                _logger.LogError(ex, "Error al eliminar relación usuario-rol con ID: {Id}", id);
                 return StatusCode(StatusCodes.Status500InternalServerError,
                     new { message = "Error interno del servidor" });
             }
